@@ -7,15 +7,25 @@ class ServiceAuth(Iauth):
         self.database = db
 
     def login(self, email:str, password:str):
-        
+        user = self.database.get(email)
+        if user is not None:
+            if password == user[1]: 
+                return {"status_code": 200, "message": "User has been logged succesfully"}
+            else:
+                return {"status_code": 403, "message": "Invalid password"}
+        else:
+            return {"status_code": 404, "message": "User not found"}
+
+
+    def sign_up(self, email:str, password:str):
         # TODO: Validar que el usuario no exista en db
         user = self.database.get(email)
         if user is not None:
-            return {"status_code": 404, "message": "User already exist"}
+            return {"status_code": 409, "message": "User already exist"}
 
         # TODO: Validar tamaño de contraseña
         if len(password) <= 5:
-            return {"status_code": 404, "message": "Password should be greater than 5 characters"}
+            return {"status_code": 400, "message": "Password should be greater than 5 characters"}
 
         payload = {
             "email": email,
@@ -24,12 +34,9 @@ class ServiceAuth(Iauth):
         
         save_user = self.database.save(payload)
         if save_user:
-            return {"status_code": 200, "message": "ok"}
+            return {"status_code": 201, "message": "User has been created succesfully"}
         
         return {"status_code": 400, "message": "failed to save the user"}
-
-    def sign_up(self):
-        pass
 
 
 

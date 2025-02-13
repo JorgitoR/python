@@ -1,0 +1,35 @@
+# 🔒 Git Ignore para Proyecto de Autenticación en Python
+
+# Ignorar archivos de entorno virtual
+venv/
+
+# Archivos de base de datos locales
+data/users.db
+
+# Archivos de caché de Python
+**/__pycache__/
+**/*.py[cod]
+
+# Configuraciones de entorno
+.env
+*.env
+
+# Archivos de logs y depuración
+logs/
+*.log
+
+# Archivos del editor de código (VS Code, PyCharm, etc.)
+.vscode/
+.idea/
+*.iml
+
+# Archivos generados por sistemas operativos
+.DS_Store
+Thumbs.db
+
+# Archivos de dependencias compiladas
+*.so
+*.dll
+*.dylib
+
+
