@@ -7,6 +7,7 @@ os.makedirs(DB_DIR, exist_ok=True)
 
 DATABASE_NAME = os.path.join(DB_DIR, "users.db")  
 
+
 class DatabaseConnection():
     def __init__(self):
         self.sqlconnection = None
@@ -34,9 +35,12 @@ class DatabaseConnection():
                 self.sqlconnection.close()
             except sqlite3.Error as e:
                 print(f'Error while closing the database connection: {e}')
+            else:
+                pass
             finally:
                 self.cursor = None
                 self.sqlconnection = None
+
     
     def create_table(self):
         conn, cursor = self.get_connection()
