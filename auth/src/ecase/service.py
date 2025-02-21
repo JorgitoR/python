@@ -1,6 +1,6 @@
 from domain.Iauth import Iauth
 from domain.ports.Idb import IDatabase
-from utils.exceptions import UserAlreadyExist
+from utils.exceptions import UserAlreadyExist, UserNotFound, InvalidPassword, WeakPassword, FailedToSaveUser
 
 
 class ServiceAuth(Iauth):
@@ -14,9 +14,9 @@ class ServiceAuth(Iauth):
             if password == user[1]: 
                 return {"status_code": 200, "message": "User has been logged succesfully"}
             else:
-                return {"status_code": 403, "message": "Invalid password"}
+                raise InvalidPassword(status_code=403, msg="Invalid password")
         else:
-            return {"status_code": 404, "message": "User not found"}
+            raise UserNotFound(status_code=404, msg="User not found")
 
 
     def sign_up(self, email:str, password:str):
@@ -24,11 +24,12 @@ class ServiceAuth(Iauth):
         try:
             user = self.database.get(email)
             if user is not None:
-                raise UserAlreadyExist(status_code=409, msg="Usuario ya exite")
+                raise UserAlreadyExist(status_code=409, msg="User already exist")
 
             # TODO: Validar tamaño de contraseña
             if len(password) <= 5:
-                return {"status_code": 400, "message": "Password should be greater than 5 characters"}
+                raise WeakPassword(status_code=400, msg="Password should be greater than 5 characters")
+
 
             payload = {
                 "email": email,
@@ -43,7 +44,7 @@ class ServiceAuth(Iauth):
             raise e
 
         else:
-            return {"status_code": 400, "message": "failed to save the user"}
+            raise FailedToSaveUser(status_code=400, msg="Failed to save the user")
     
         finally:
             pass 
