@@ -10,6 +10,6 @@ sql_db = SQL(db_conn)
 app = FastAPI(title="Authentication API", version="1.0")
 
 def get_auth_manager():
-    return AuthManagerDepencency(sql_db)
+    yield AuthManagerDepencency(sql_db)
 
 app.include_router(get_register_router(get_auth_manager), prefix="/auth", tags=["Authentication"])
