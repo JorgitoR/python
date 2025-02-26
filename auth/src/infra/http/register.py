@@ -1,4 +1,4 @@
-from auth.src.utils.schema import BU
+from utils.schema import BU
 from ecase.service import AuthManagerDepencency
 from fastapi import FastAPI, APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr
@@ -32,7 +32,7 @@ def get_register_router(
         user: schema_register,  # type: ignore
         auth_service: AuthManagerDepencency = Depends(get_auth_manager)):
         try:
-            response = auth_service.sign_up(user.email, user.password)
+            response = auth_service.sign_up(user)
             return response
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))

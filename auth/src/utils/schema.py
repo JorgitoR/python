@@ -9,6 +9,7 @@ class BaseUserCreate(BaseModel):
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
     is_verified: Optional[bool] = False
-
+    phone: Optional[int] = 0
+ 
 
 BU = TypeVar("BU", bound=BaseUserCreate)
