@@ -1,8 +1,13 @@
 from utils.schema import BU
-from ecase.service import AuthManagerDepencency
-from fastapi import FastAPI, APIRouter, Depends, HTTPException
+from infra.db.sql import SQL
+from infra.db.nosql import NoSQL
+from typing import Type, Literal
 from pydantic import BaseModel, EmailStr
-from typing import Type
+from ecase.service import AuthManagerDepencency
+from infra.db.database import DatabaseConnection
+from fastapi import FastAPI, APIRouter, Depends, HTTPException
+
+
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -14,10 +19,14 @@ class UserRegister(BaseModel):
     
 def get_register_router(
         get_auth_manager: AuthManagerDepencency,
-        schema_register: Type[BU]
+        schema_register: Type[BU],
+        db_type: Literal["sql", "nosql"] = "sql"
 ) -> APIRouter:
     
     router = APIRouter()
+    db = DatabaseConnection()
+
+    user_repo = SQL(db) if db_type == "sql" else NoSQL(db)
 
     @router.post("/login", status_code=200, name="login")
     async def login(user: UserLogin, auth_service: AuthManagerDepencency = Depends(get_auth_manager)):
@@ -32,7 +41,7 @@ def get_register_router(
         user: schema_register,  # type: ignore
         auth_service: AuthManagerDepencency = Depends(get_auth_manager)):
         try:
-            response = auth_service.sign_up(user.email, user.password)
+            response = auth_service.sign_up(user)
             return response
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))

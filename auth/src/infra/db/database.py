@@ -1,61 +1,68 @@
-import os 
-import sqlite3
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  
-DB_DIR = os.path.join(BASE_DIR, "../../data")  
-os.makedirs(DB_DIR, exist_ok=True)  
-
-DATABASE_NAME = os.path.join(DB_DIR, "users.db")  
+import os
+import pymysql
+import boto3
+from urllib.parse import urlparse
+from config import DB_TYPE, SQL_DATABASE_URL, AWS_REGION, DYNAMODB_TABLE_NAME
 
 
-class DatabaseConnection():
+class DatabaseConnection:
     def __init__(self):
         self.sqlconnection = None
         self.cursor = None
-    
-    def get_connection(self):
-        if self.sqlconnection is None:
-            try:
-                self.sqlconnection = sqlite3.connect(DATABASE_NAME, check_same_thread=False)
-                self.cursor = self.sqlconnection.cursor()
-            except sqlite3.Error as e:
-                print(f'Error attemping to establish connection with the database: {e}')
-                return None, None
-        if self.cursor is None:
+
+        if DB_TYPE == "sql":
+            self.connect_sql()
+
+        elif DB_TYPE == "nosql":
+            self.db_type = "nosql"
+            self.dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
+            self.table = self.dynamodb.Table(DYNAMODB_TABLE_NAME)
+        else:
+            raise ValueError("DB_TYPE debe ser 'sql' o 'nosql'")
+
+    def connect_sql(self):
+        """ Inicia la conexión con la base de datos SQL """
+        try:
+            db_url = urlparse(SQL_DATABASE_URL)
+
+            self.sqlconnection = pymysql.connect(
+                host=db_url.hostname,
+                user=db_url.username,
+                password=db_url.password,
+                database=db_url.path.lstrip("/"),  # Elimina la barra inicial `/`
+                port=db_url.port or 3306  # Si no hay puerto, usa el default de MySQL
+            )
             self.cursor = self.sqlconnection.cursor()
+            print("Conexión establecida con la base de datos SQL")
+        except pymysql.Error as e:
+            print(f"Error al conectar con SQL: {e}")
+            self.sqlconnection = None
+            self.cursor = None
+
+    def get_sql_connection(self):
+        """ Devuelve la conexión SQL si DB_TYPE es 'sql' """
+        if self.sqlconnection is None or self.cursor is None:
+            self.connect_sql()  # 🔹 Reconectar si es necesario
         return self.sqlconnection, self.cursor
-
-    def close_connection(self):
-        if self.sqlconnection is not None:
-            try:
-                if self.sqlconnection.in_transaction:
-                    self.sqlconnection.commit()
-                if self.cursor is not None:
-                    self.cursor.close()
-                self.sqlconnection.close()
-            except sqlite3.Error as e:
-                print(f'Error while closing the database connection: {e}')
-            else:
-                pass
-            finally:
-                self.cursor = None
-                self.sqlconnection = None
-
     
-    def create_table(self):
-        conn, cursor = self.get_connection()
-        if conn is not None and cursor is not None:
+    def get_nosql_connection(self):
+        """ Devuelve la conexión NoSQL si DB_TYPE es 'nosql' """
+        if self.db_type == "nosql":
+            return self.table
+        return None
+
+    def close_sql_connection(self):
+        """ Cierra la conexión SQL si está activa """
+        if self.sqlconnection:
             try:
-                table = """ CREATE TABLE IF NOT EXISTS USERS(
-                            email VARCHAR(255) NOT NULL,
-                            password VARCHAR(255) NOT NULL
-                        );"""
-                cursor.execute(table)
-                conn.commit()
-            except sqlite3.Error as e:
-                print(f'Error while creating the table: {e}')
+                self.sqlconnection.commit()
+                self.cursor.close()
+                self.sqlconnection.close()
+            except pymysql.Error as e:
+                print(f"Error al cerrar la conexión SQL: {e}")
             finally:
-                self.close_connection()
+                self.sqlconnection = None
+                self.cursor = None
 
 
         

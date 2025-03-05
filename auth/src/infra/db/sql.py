@@ -1,3 +1,5 @@
+from typing import Type
+from utils.schema import BU
 from domain.ports.Idb import IDatabase
 from .database import DatabaseConnection
 
@@ -5,46 +7,88 @@ class SQL(IDatabase):
 
     def __init__(self, db: DatabaseConnection):
         self.db = db
+        self.create_table()
+    
+    def create_table(self):
+        """ Crea la tabla USERS con el esquema del modelo BU """
+        conn, cursor = self.db.get_sql_connection()
+        query = """
+        CREATE TABLE IF NOT EXISTS USERS (
+            email VARCHAR(255) PRIMARY KEY,
+            password VARCHAR(255) NOT NULL,
+            name VARCHAR(255),
+            is_active BOOLEAN DEFAULT TRUE,
+            is_superuser BOOLEAN DEFAULT FALSE,
+            is_verified BOOLEAN DEFAULT FALSE,
+            phone BIGINT DEFAULT 0
+        );
+        """
+        cursor.execute(query)
+        conn.commit()
+        self.db.close_sql_connection()
 
-    def save(self, data:dict):
-        # TODO: persist logic with real database
+    def save(self, data: Type[BU]):
+        """ Guarda un usuario en la base de datos SQL """
         try:
-            conn, cursor = self.db.get_connection()
-            cursor.execute("INSERT INTO USERS (email, password) VALUES (?, ?) ", (data['email'], data['password']))
+            conn, cursor = self.db.get_sql_connection()
+            query = """
+            INSERT INTO USERS (email, password, name, is_active, is_superuser, is_verified, phone) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s);
+            """
+            cursor.execute(query, (
+                data.email, data.password, data.name, data.is_active, data.is_superuser, data.is_verified, data.phone
+            ))
             conn.commit()
-            return True
+            return {"message": "Usuario guardado en SQL", "user": data.model_dump()}
         except Exception as e:
-            print(f'Error while saving user information: {e}')
-            return False
+            print(f'Error guardando usuario en SQL: {e}')
+            return {"error": str(e)}
         finally:
-            self.db.close_connection()
-
-    def get(self, email:str):
+            self.db.close_sql_connection()
+    
+    def get(self, email: str):
+        """ Obtiene un usuario por su email en SQL """
         try:
-            _, cursor = self.db.get_connection()
-            cursor.execute("SELECT * FROM USERS WHERE email = ?", (email,))
+            _, cursor = self.db.get_sql_connection()
+            query = "SELECT * FROM USERS WHERE email = %s;"
+            cursor.execute(query, (email,))
             user = cursor.fetchone()
             if user:
-                return (user[0], user[1])
+                return {
+                    "email": user[0],
+                    "password": user[1],
+                    "name": user[2],
+                    "is_active": bool(user[3]),
+                    "is_superuser": bool(user[4]),
+                    "is_verified": bool(user[5]),
+                    "phone": user[6]
+                }
             return None
         except Exception as e:
-            print(f'Error getting the email information: {e}')
-            return None 
+            print(f'Error obteniendo usuario en SQL: {e}')
+            return {"error": str(e)}
         finally:
-            self.db.close_connection()
-
-    def update(self, data, new_password):
+            self.db.close_sql_connection()
+    
+    def update(self, email: str, new_data: Type[BU]):
+        """ Actualiza un usuario en SQL """
         try:
-            conn, cursor = self.db.get_connection()
-            cursor.execute("UPDATE USERS SET password  = ? WHERE email = ?", (new_password, data['email']))
+            conn, cursor = self.db.get_sql_connection()
+            query = """
+            UPDATE USERS 
+            SET password = %s, name = %s, is_active = %s, is_superuser = %s, is_verified = %s, phone = %s
+            WHERE email = %s;
+            """
+            cursor.execute(query, (
+                new_data.password, new_data.name, new_data.is_active, new_data.is_superuser, new_data.is_verified, new_data.phone, email
+            ))
             conn.commit()
-            print("Password updated successfully.")
-            return True
+            return {"message": "Usuario actualizado en SQL", "user": new_data.model_dump()}
         except Exception as e:
-            print(f'Error while updating user information: {e}')
-            return False
+            print(f'Error actualizando usuario en SQL: {e}')
+            return {"error": str(e)}
         finally:
-            self.db.close_connection()
+            self.db.close_sql_connection()
 
 
     
