@@ -19,4 +19,4 @@ def get_auth_manager():
 class UserCreate(schema.BaseUserCreate):
     pass 
 
-app.include_router(get_register_router(get_auth_manager, UserCreate, DB_TYPE), prefix="/auth", tags=["Authentication"])
+app.include_router(get_register_router(get_auth_manager, UserCreate), prefix="/auth", tags=["Authentication"])

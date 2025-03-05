@@ -19,14 +19,10 @@ class UserRegister(BaseModel):
     
 def get_register_router(
         get_auth_manager: AuthManagerDepencency,
-        schema_register: Type[BU],
-        db_type: Literal["sql", "nosql"] = "sql"
+        schema_register: Type[BU]
 ) -> APIRouter:
     
     router = APIRouter()
-    db = DatabaseConnection()
-
-    user_repo = SQL(db) if db_type == "sql" else NoSQL(db)
 
     @router.post("/login", status_code=200, name="login")
     async def login(user: UserLogin, auth_service: AuthManagerDepencency = Depends(get_auth_manager)):

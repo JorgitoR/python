@@ -28,13 +28,10 @@ class NoSQL(IDatabase):
             response = table.get_item(Key={"pk": email, "sk": "user"})
             if "Item" in response:
                 return response["Item"]
+            return None
         except Exception as e:
-            if e.response["Error"]["Code"] == "ValidationException":
-                print(e)
-                return None 
-            else:
-                print(f"Error consultando DynamoDB: {e}")
-                return {"error": str(e)}
+            print(f"Error consultando DynamoDB: {e}")
+            return {"error": str(e)}
 
     def update(self, update_data: Type[BU], email:str):
         """ Actualiza un usuario en DynamoDB """
