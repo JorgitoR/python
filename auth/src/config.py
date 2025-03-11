@@ -1,5 +1,7 @@
 import os
 
+gcw = os.getcwd()
+
 DB_TYPE = os.getenv('DB_TYPE', 'nosql')
 
 SQL_DATABASE_URL = os.getenv(

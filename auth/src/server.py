@@ -6,10 +6,8 @@ from infra.db.sql import SQL
 from infra.db.nosql import NoSQL
 from config import DB_TYPE
 
-from infra.db.database import DatabaseConnection
 
-db_conn = DatabaseConnection()
-db = SQL(db_conn) if DB_TYPE == "sql" else NoSQL(db_conn)
+db = SQL() if DB_TYPE == "sql" else NoSQL()
 
 app = FastAPI(title="Authentication API", version="1.0")
 

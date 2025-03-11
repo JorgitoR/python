@@ -4,10 +4,7 @@ from infra.db.nosql import NoSQL
 from typing import Type, Literal
 from pydantic import BaseModel, EmailStr
 from ecase.service import AuthManagerDepencency
-from infra.db.database import DatabaseConnection
 from fastapi import FastAPI, APIRouter, Depends, HTTPException
-
-
 
 class UserLogin(BaseModel):
     email: EmailStr

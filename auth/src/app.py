@@ -1,14 +1,10 @@
 from ecase.service import ServiceAuth
 from infra.db.sql import SQL
-from infra.db.database import DatabaseConnection
 
 # Iniciar Conexion y servicios
-db_conn = DatabaseConnection()
-sql_db = SQL(db_conn)
+sql_db = SQL()
 auth = ServiceAuth(sql_db)
 
-# Crear tabla USERS si no existe
-db_conn.create_table()
 
 ## Función para imprimir secciones organizadas en la terminal
 def print_section(title):
