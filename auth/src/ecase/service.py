@@ -3,6 +3,7 @@ from domain.ports.Idb import IDatabase
 from utils.exceptions import UserAlreadyExist, UserNotFound, InvalidPassword, WeakPassword, FailedToSaveUser
 from typing import Type
 from utils.schema import BaseUserCreate
+from utils.jwt_manager import create_access_token
 
 class ServiceAuth(Iauth):
 
@@ -13,7 +14,12 @@ class ServiceAuth(Iauth):
         user = self.database.get(email)
         if user is not None:
             if password == user['password']: 
-                return {"status_code": 200, "message": "User has been logged succesfully"}
+                token_data = {"sub": user['email']}
+                access_token = create_access_token(token_data)
+                return {
+                    "access_token": access_token,
+                    "token_type": "bearer"
+                }
             else:
                 raise InvalidPassword(status_code=403, msg="Invalid password")
         else:
