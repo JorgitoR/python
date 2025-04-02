@@ -18,3 +18,8 @@ class UserCreate(schema.BaseUserCreate):
     pass 
 
 app.include_router(get_register_router(get_auth_manager, UserCreate), prefix="/auth", tags=["Authentication"])
+
+
+@app.get("/health")
+def health():
+    return {"msg": "hello world"}
